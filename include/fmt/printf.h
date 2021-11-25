@@ -89,7 +89,7 @@ class printf_precision_handler {
   template <typename T, FMT_ENABLE_IF(!std::is_integral<T>::value)>
   int operator()(T) {
     FMT_THROW(format_error("precision is not integer"));
-    return 0;
+    return -1;
   }
 };
 
@@ -128,6 +128,7 @@ template <typename T, typename Context> class arg_converter {
 
   template <typename U, FMT_ENABLE_IF(std::is_integral<U>::value)>
   void operator()(U value) {
+    if (type_ != 'd' && type_ != 'i' && type_ != 'o' && type_ != 'u' && type_ != 'x' && type_ != 'X') return;
     bool is_signed = type_ == 'd' || type_ == 'i';
     using target_type = conditional_t<std::is_same<T, void>::value, U, T>;
     if (const_check(sizeof(target_type) <= sizeof(int))) {
@@ -249,8 +250,8 @@ class printf_arg_formatter : public arg_formatter<Char> {
     // std::is_same instead.
     if (std::is_same<T, Char>::value) {
       format_specs fmt_specs = this->specs;
-      if (fmt_specs.type && fmt_specs.type != 'c')
-        return (*this)(static_cast<int>(value));
+      if (fmt_specs.type && fmt_specs.type != 'c' && fmt_specs.type != 'y')
+        fmt_specs.type = 'c';
       fmt_specs.sign = sign::none;
       fmt_specs.alt = false;
       fmt_specs.fill[0] = ' ';  // Ignore '0' flag for char types.

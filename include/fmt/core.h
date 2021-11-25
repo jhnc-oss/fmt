@@ -2480,6 +2480,7 @@ FMT_CONSTEXPR void check_int_type_spec(char spec, ErrorHandler&& eh) {
   switch (spec) {
   case 0:
   case 'd':
+  case 'y':
   case 'x':
   case 'X':
   case 'b':
@@ -2497,7 +2498,7 @@ FMT_CONSTEXPR void check_int_type_spec(char spec, ErrorHandler&& eh) {
 template <typename Char, typename ErrorHandler = error_handler>
 FMT_CONSTEXPR auto check_char_specs(const basic_format_specs<Char>& specs,
                                     ErrorHandler&& eh = {}) -> bool {
-  if (specs.type && specs.type != 'c') {
+  if (specs.type && specs.type != 'c' && specs.type != 's' && specs.type != 'y') {
     check_int_type_spec(specs.type, eh);
     return false;
   }
@@ -2553,6 +2554,8 @@ FMT_CONSTEXPR auto parse_float_type_spec(const basic_format_specs<Char>& specs,
     result.upper = true;
     FMT_FALLTHROUGH;
   case 'f':
+  case 'v':
+  case 'y':
     result.format = float_format::fixed;
     result.showpoint |= specs.precision != 0;
     break;
@@ -2564,6 +2567,8 @@ FMT_CONSTEXPR auto parse_float_type_spec(const basic_format_specs<Char>& specs,
     break;
   default:
     eh.on_error("invalid type specifier");
+    result.format = float_format::fixed;
+    result.showpoint |= specs.precision != 0;
     break;
   }
   return result;
@@ -2572,19 +2577,19 @@ FMT_CONSTEXPR auto parse_float_type_spec(const basic_format_specs<Char>& specs,
 template <typename Char, typename ErrorHandler = error_handler>
 FMT_CONSTEXPR auto check_cstring_type_spec(Char spec, ErrorHandler&& eh = {})
     -> bool {
-  if (spec == 0 || spec == 's') return true;
+  if (spec == 0 || spec == 's'|| spec == 'y')  return true;
   if (spec != 'p') eh.on_error("invalid type specifier");
-  return false;
+  return true;
 }
 
 template <typename Char, typename ErrorHandler = error_handler>
 FMT_CONSTEXPR void check_string_type_spec(Char spec, ErrorHandler&& eh = {}) {
-  if (spec != 0 && spec != 's') eh.on_error("invalid type specifier");
+  if (spec != 0 && spec != 's' && spec != 'y') eh.on_error("invalid type specifier");
 }
 
 template <typename Char, typename ErrorHandler>
 FMT_CONSTEXPR void check_pointer_type_spec(Char spec, ErrorHandler&& eh) {
-  if (spec != 0 && spec != 'p') eh.on_error("invalid type specifier");
+  if (spec != 0 && spec != 'p' && spec != 'y') eh.on_error("invalid type specifier");
 }
 
 // A parse_format_specs handler that checks if specifiers are consistent with
