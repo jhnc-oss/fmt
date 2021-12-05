@@ -89,7 +89,7 @@ class printf_precision_handler {
   template <typename T, FMT_ENABLE_IF(!std::is_integral<T>::value)>
   int operator()(T) {
     FMT_THROW(format_error("precision is not integer"));
-    return -1;
+    return 0;
   }
 };
 

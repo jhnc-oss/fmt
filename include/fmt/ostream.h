@@ -112,8 +112,6 @@ void format_value(buffer<Char>& buf, const T& value,
   std::basic_ostream<Char> output(&format_buf);
 #if !defined(FMT_STATIC_THOUSANDS_SEPARATOR)
   if (loc) output.imbue(loc.get<std::locale>());
-#else
-  static_cast<void>(loc);
 #endif
   output << value;
   output.exceptions(std::ios_base::failbit | std::ios_base::badbit);

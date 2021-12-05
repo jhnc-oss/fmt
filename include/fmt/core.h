@@ -2541,6 +2541,7 @@ FMT_CONSTEXPR auto parse_float_type_spec(const basic_format_specs<Char>& specs,
     result.upper = true;
     FMT_FALLTHROUGH;
   case 'g':
+  case 'y':
     result.format = float_format::general;
     break;
   case 'E':
@@ -2554,8 +2555,6 @@ FMT_CONSTEXPR auto parse_float_type_spec(const basic_format_specs<Char>& specs,
     result.upper = true;
     FMT_FALLTHROUGH;
   case 'f':
-  case 'v':
-  case 'y':
     result.format = float_format::fixed;
     result.showpoint |= specs.precision != 0;
     break;
@@ -2567,8 +2566,7 @@ FMT_CONSTEXPR auto parse_float_type_spec(const basic_format_specs<Char>& specs,
     break;
   default:
     eh.on_error("invalid type specifier");
-    result.format = float_format::fixed;
-    result.showpoint |= specs.precision != 0;
+    result.format = float_format::general;
     break;
   }
   return result;
