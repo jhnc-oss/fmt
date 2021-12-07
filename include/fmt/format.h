@@ -40,6 +40,7 @@
 #include <stdexcept>     // std::runtime_error
 #include <system_error>  // std::system_error
 #include <utility>       // std::swap
+#include <cfloat>        // DBL_DIG
 
 #include "core.h"
 
@@ -1490,6 +1491,7 @@ FMT_CONSTEXPR FMT_INLINE auto write_int(OutputIt out, write_int_arg<T> arg,
     FMT_THROW(format_error("invalid type specifier"));
     FMT_FALLTHROUGH;
   case 0:
+  case 'y':
   case 'd': {
     if (specs.localized &&
         write_int_localized(out, static_cast<uint64_or_128_t<T>>(abs_value),
@@ -1780,9 +1782,27 @@ auto write(OutputIt out, T value, basic_format_specs<Char> specs,
   if (const_check(!is_supported_floating_point(value))) return out;
   float_specs fspecs = parse_float_type_spec(specs);
   fspecs.sign = specs.sign;
+
+  if (specs.type == 'f') {
+    static const double prevPowerOfTen[17] = { 1e-1, 1, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13, 1e14, 1e15 };
+    if (specs.precision < 0) {
+      specs.precision = 6;
+    }
+    if (specs.precision > DBL_DIG || fabs(value) >= prevPowerOfTen[DBL_DIG - specs.precision + 1]) {
+      specs.precision = DBL_DIG;
+      fspecs.format = float_format::general;
+      fspecs.showpoint = specs.alt;
+    } else {
+      if (std::is_same<T, double>()) {
+        if (fabs(value) < prevPowerOfTen[DBL_DIG - specs.precision]) {
+          value = static_cast<T>( std::nextafter(value, value >= 0.0 ? 1e15 : -1e15) );
+        }
+      }
+    }
+  }
+
   if (std::signbit(value)) {  // value < 0 is false for NaN so use signbit.
-    if (value != -0.0)        // display -0 without sign!
-      fspecs.sign = sign::minus;
+    fspecs.sign = sign::minus;
     value = -value;
   } else if (fspecs.sign == sign::minus) {
     fspecs.sign = sign::none;
