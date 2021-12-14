@@ -5,6 +5,11 @@
 //
 // For the license information refer to format.h.
 
+#define FMT_EXCEPTIONS 0
+#define FMT_STATIC_THOUSANDS_SEPARATOR 0
+#define FMT_LOCALE
+#define FMT_EXPORT
+
 #ifdef __GNUC__
 #pragma GCC visibility push(default)
 #endif
