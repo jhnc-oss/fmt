@@ -5,6 +5,11 @@
 //
 // For the license information refer to format.h.
 
+#define FMT_EXCEPTIONS 0
+#define FMT_STATIC_THOUSANDS_SEPARATOR 0
+#define FMT_LOCALE
+#define FMT_EXPORT
+
 // Disable bogus MSVC warnings.
 #if !defined(_CRT_SECURE_NO_WARNINGS) && defined(_MSC_VER)
 #  define _CRT_SECURE_NO_WARNINGS
