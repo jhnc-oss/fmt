@@ -15,12 +15,8 @@
 #include <string>
 #include <type_traits>
 
-#undef FMT_STATIC_THOUSANDS_SEPARATOR
-#define FMT_STATIC_THOUSANDS_SEPARATOR 0
 #undef FMT_EXCEPTIONS
 #define FMT_EXCEPTIONS 0
-#undef FMT_LOCALE
-#define FMT_LOCALE
 
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
 #define FMT_VERSION 80001
