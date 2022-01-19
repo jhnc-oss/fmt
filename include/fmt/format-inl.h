@@ -34,10 +34,7 @@ namespace detail {
 FMT_FUNC void assert_fail(const char* file, int line, const char* message) {
   // Use unchecked std::fprintf to avoid triggering another assertion when
   // writing to stderr fails
-  std::fprintf(stderr, "%s:%d: assertion failed: %s", file, line, message);
-  // Chosen instead of std::abort to satisfy Clang in CUDA mode during device
-  // code pass.
-  std::terminate();
+  std::fprintf(stderr, "%s:%d: assertion failed: %s\n", file, line, message);
 }
 
 FMT_FUNC void throw_format_error(const char* message) {

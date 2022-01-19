@@ -5,6 +5,9 @@
 //
 // For the license information refer to format.h.
 
+#ifdef __GNUC__
+#pragma GCC visibility push(default)
+#endif
 #include "fmt/format-inl.h"
 
 FMT_BEGIN_NAMESPACE
