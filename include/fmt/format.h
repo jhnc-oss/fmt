@@ -41,6 +41,7 @@
 #include <stdexcept>     // std::runtime_error
 #include <system_error>  // std::system_error
 #include <utility>       // std::swap
+#include <cfloat>        // DBL_DIG
 
 #ifdef __cpp_lib_bit_cast
 #  include <bit>  // std::bitcast
@@ -96,10 +97,17 @@ FMT_END_NAMESPACE
 #      define FMT_THROW(x) throw x
 #    endif
 #  else
-#    define FMT_THROW(x)               \
-      do {                             \
-        FMT_ASSERT(false, (x).what()); \
-      } while (false)
+#    ifdef _DEBUG
+#      define FMT_THROW(x)            \
+        do {                          \
+          ::printf("%s\n", x.what()); \
+        } while (false)
+#    else
+#      define FMT_THROW(x)            \
+        do {                          \
+          static_cast<void>(x);       \
+        } while (false)
+#    endif
 #  endif
 #endif
 
@@ -1555,6 +1563,10 @@ FMT_CONSTEXPR FMT_INLINE auto write_int(OutputIt out, write_int_arg<T> arg,
   auto abs_value = arg.abs_value;
   auto prefix = arg.prefix;
   switch (specs.type) {
+  default:
+    throw_format_error("invalid type specifier");
+    FMT_FALLTHROUGH;
+  case presentation_type::any:
   case presentation_type::none:
   case presentation_type::dec: {
     if (specs.localized &&
@@ -1603,8 +1615,6 @@ FMT_CONSTEXPR FMT_INLINE auto write_int(OutputIt out, write_int_arg<T> arg,
   }
   case presentation_type::chr:
     return write_char(out, static_cast<Char>(abs_value), specs);
-  default:
-    throw_format_error("invalid type specifier");
   }
   return out;
 }
@@ -1975,6 +1985,31 @@ FMT_CONSTEXPR20 auto write(OutputIt out, T value,
   if (const_check(!is_supported_floating_point(value))) return out;
   float_specs fspecs = parse_float_type_spec(specs);
   fspecs.sign = specs.sign;
+
+  if (specs.type == presentation_type::fixed_lower) {
+    static const double prevPowerOfTen[17] = {1e-1, 1,    1e1,  1e2,  1e3, 1e4,
+                                              1e5,  1e6,  1e7,  1e8,  1e9, 1e10,
+                                              1e11, 1e12, 1e13, 1e14, 1e15};
+    if (specs.precision < 0) {
+      specs.precision = 6;
+    }
+    if (specs.precision > DBL_DIG || fabs(value) >= prevPowerOfTen[DBL_DIG - specs.precision + 1]) {
+      specs.precision = DBL_DIG;
+      fspecs.format = float_format::general;
+      fspecs.showpoint = specs.alt;
+    } else {
+#ifdef __cpp_if_constexpr
+      if constexpr (std::is_same<T, double>()) {
+#else
+      if (std::is_same<T, double>()) {
+#endif
+        if (fabs(value) < prevPowerOfTen[DBL_DIG - specs.precision]) {
+          value = static_cast<T>( std::nextafter(value, value >= 0.0 ? 1e15 : -1e15) );
+        }
+      }
+    }
+  }
+
   if (detail::signbit(value)) {  // value < 0 is false for NaN so use signbit.
     fspecs.sign = sign::minus;
     value = -value;
