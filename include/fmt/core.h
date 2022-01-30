@@ -52,6 +52,13 @@
 #  define FMT_ICC_VERSION 0
 #endif
 
+#ifdef __NVCOMPILER
+#  define FMT_NVCOMPILER_VERSION \
+    (__NVCOMPILER_MAJOR__ * 100 + __NVCOMPILER_MINOR__)
+#else
+#  define FMT_NVCOMPILER_VERSION 0
+#endif
+
 #ifdef __NVCC__
 #  define FMT_NVCC __NVCC__
 #else
@@ -290,7 +297,7 @@
 
 // Enable minimal optimizations for more compact code in debug mode.
 FMT_GCC_PRAGMA("GCC push_options")
-#ifndef __OPTIMIZE__
+#if !defined(__OPTIMIZE__) && !FMT_NVCOMPILER_VERSION
 FMT_GCC_PRAGMA("GCC optimize(\"Og\")")
 #endif
 
@@ -332,8 +339,8 @@ FMT_BEGIN_DETAIL_NAMESPACE
 // (void)var does not work on many Intel compilers.
 template <typename... T> FMT_CONSTEXPR void ignore_unused(const T&...) {}
 
-constexpr FMT_INLINE auto is_constant_evaluated(bool default_value = false)
-    noexcept -> bool {
+constexpr FMT_INLINE auto is_constant_evaluated(
+    bool default_value = false) noexcept -> bool {
 #ifdef __cpp_lib_is_constant_evaluated
   ignore_unused(default_value);
   return std::is_constant_evaluated();
@@ -439,8 +446,7 @@ template <typename Char> class basic_string_view {
 
   /** Constructs a string reference object from a C string and a size. */
   constexpr basic_string_view(const Char* s, size_t count) noexcept
-      : data_(s),
-        size_(count) {}
+      : data_(s), size_(count) {}
 
   /**
     \rst
@@ -461,13 +467,12 @@ template <typename Char> class basic_string_view {
   template <typename Traits, typename Alloc>
   FMT_CONSTEXPR basic_string_view(
       const std::basic_string<Char, Traits, Alloc>& s) noexcept
-      : data_(s.data()),
-        size_(s.size()) {}
+      : data_(s.data()), size_(s.size()) {}
 
   template <typename S, FMT_ENABLE_IF(std::is_same<
                                       S, detail::std_string_view<Char>>::value)>
-  FMT_CONSTEXPR basic_string_view(S s) noexcept : data_(s.data()),
-                                                      size_(s.size()) {}
+  FMT_CONSTEXPR basic_string_view(S s) noexcept
+      : data_(s.data()), size_(s.size()) {}
 
   /** Returns a pointer to the string data. */
   constexpr auto data() const noexcept -> const Char* { return data_; }
@@ -636,9 +641,7 @@ class basic_format_parse_context : private ErrorHandler {
   /**
     Returns an iterator past the end of the format string range being parsed.
    */
-  constexpr auto end() const noexcept -> iterator {
-    return format_str_.end();
-  }
+  constexpr auto end() const noexcept -> iterator { return format_str_.end(); }
 
   /** Advances the begin iterator to ``it``. */
   FMT_CONSTEXPR void advance_to(iterator it) {
@@ -767,10 +770,8 @@ template <typename T> class buffer {
   FMT_MSC_WARNING(suppress : 26495)
   buffer(size_t sz) noexcept : size_(sz), capacity_(sz) {}
 
-  FMT_CONSTEXPR20 buffer(T* p = nullptr, size_t sz = 0,
-                         size_t cap = 0) noexcept : ptr_(p),
-                                                        size_(sz),
-                                                        capacity_(cap) {}
+  FMT_CONSTEXPR20 buffer(T* p = nullptr, size_t sz = 0, size_t cap = 0) noexcept
+      : ptr_(p), size_(sz), capacity_(cap) {}
 
   FMT_CONSTEXPR20 ~buffer() = default;
   buffer(buffer&&) = default;
@@ -1422,6 +1423,13 @@ template <typename Context> struct arg_mapper {
       -> decltype(std::declval<arg_mapper>().map(
           static_cast<typename std::underlying_type<T>::type>(val))) {
     return map(static_cast<typename std::underlying_type<T>::type>(val));
+  }
+
+  template <typename T, typename U = decltype(format_as(T())),
+            FMT_ENABLE_IF(std::is_enum<T>::value&& std::is_integral<U>::value)>
+  FMT_CONSTEXPR FMT_INLINE auto map(const T& val)
+      -> decltype(std::declval<arg_mapper>().map(U())) {
+    return map(format_as(val));
   }
 
   FMT_CONSTEXPR FMT_INLINE auto map(detail::byte val) -> unsigned {
