@@ -72,8 +72,10 @@ struct explicitly_convertible_to_wstring_view {
 };
 
 TEST(xchar_test, format_explicitly_convertible_to_wstring_view) {
-  EXPECT_EQ(L"foo",
-            fmt::format(L"{}", explicitly_convertible_to_wstring_view()));
+  // Types explicitly convertible to wstring_view are not formattable by
+  // default because it may introduce ODR violations.
+  static_assert(
+      !fmt::is_formattable<explicitly_convertible_to_wstring_view>::value, "");
 }
 #endif
 
@@ -217,6 +219,12 @@ enum streamable_enum {};
 std::wostream& operator<<(std::wostream& os, streamable_enum) {
   return os << L"streamable_enum";
 }
+
+namespace fmt {
+template <>
+struct formatter<streamable_enum, wchar_t> : basic_ostream_formatter<wchar_t> {
+};
+}  // namespace fmt
 
 enum unstreamable_enum {};
 
