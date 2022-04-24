@@ -309,7 +309,7 @@ The following user-defined literals are defined in ``fmt/format.h``.
 
 .. doxygenfunction:: operator""_format(const char *s, size_t n) -> detail::udl_formatter<char> 
 
-.. doxygenfunction:: operator""_a(const char *s, size_t) -> detail::udl_arg<char>
+.. doxygenfunction:: operator""_a()
 
 Utilities
 ---------
@@ -450,15 +450,18 @@ The format syntax is described in :ref:`chrono-specs`.
 Format string compilation
 =========================
 
-``fmt/compile.h`` provides format string compilation support when using
-``FMT_COMPILE``. Format strings are parsed, checked and converted into efficient
-formatting code at compile-time. This supports arguments of built-in and string
-types as well as user-defined types with ``constexpr`` ``parse`` functions in
-their ``formatter`` specializations. Format string compilation can generate more
-binary code compared to the default API and is only recommended in places where
-formatting is a performance bottleneck.
+``fmt/compile.h`` provides format string compilation enabled via the
+``FMT_COMPILE`` macro or the ``_cf`` user-defined literal. Format strings
+marked with ``FMT_COMPILE`` or ``_cf`` are parsed, checked and converted into
+efficient formatting code at compile-time. This supports arguments of built-in
+and string types as well as user-defined types with ``constexpr`` ``parse``
+functions in their ``formatter`` specializations. Format string compilation can
+generate more binary code compared to the default API and is only recommended in
+places where formatting is a performance bottleneck.
 
 .. doxygendefine:: FMT_COMPILE
+
+.. doxygenfunction:: operator""_cf()
 
 .. _color-api:
 
@@ -472,6 +475,8 @@ Terminal color and text style
 .. doxygenfunction:: fg(detail::color_type)
 
 .. doxygenfunction:: bg(detail::color_type)
+
+.. doxygenfunction:: styled(const T& value, text_style ts)
 
 .. _os-api:
 
@@ -492,7 +497,7 @@ System APIs
 ``fmt/ostream.h`` provides ``std::ostream`` support including formatting of
 user-defined types that have an overloaded insertion operator (``operator<<``).
 In order to make a type formattable via ``std::ostream`` you should provide a
-``formatter`` specialization inherited from ``ostream_formatter``:
+``formatter`` specialization inherited from ``ostream_formatter``::
 
   #include <fmt/ostream.h>
 
@@ -511,7 +516,7 @@ In order to make a type formattable via ``std::ostream`` you should provide a
   std::string s = fmt::format("The date is {}", date(2012, 12, 9));
   // s == "The date is 2012-12-9"
 
-.. doxygenfunction:: print(std::basic_ostream<Char> &os, const S &format_str, Args&&... args)
+.. doxygenfunction:: print(std::ostream &os, format_string<T...> fmt, T&&... args)
 
 .. _printf-api:
 
