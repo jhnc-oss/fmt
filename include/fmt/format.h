@@ -3720,7 +3720,7 @@ FMT_CONSTEXPR20 auto format_float(Float value, int precision, float_specs specs,
 }
 template <typename Char, typename OutputIt, typename T>
 FMT_CONSTEXPR20 auto write_float(OutputIt out, T value,
-                                 basic_format_specs<Char> specs, locale_ref loc)
+                                 format_specs<Char> specs, locale_ref loc)
     -> OutputIt {
   float_specs fspecs = parse_float_type_spec(specs);
   fspecs.sign = specs.sign;
