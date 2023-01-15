@@ -2194,8 +2194,6 @@ template <typename Char = char> struct loc_writer {
   auto operator()(T) -> bool {
     return false;
   }
-
-  auto operator()(...) -> bool { return false; }
 };
 
 template <typename Char, typename OutputIt, typename T>
@@ -2207,7 +2205,7 @@ FMT_CONSTEXPR FMT_INLINE auto write_int(OutputIt out, write_int_arg<T> arg,
   auto prefix = arg.prefix;
   switch (specs.type) {
   default:
-    throw_format_error("invalid type specifier");
+    throw_format_error("invalid format specifier");
     FMT_FALLTHROUGH;
   case presentation_type::any:
   case presentation_type::none:
@@ -2253,8 +2251,6 @@ FMT_CONSTEXPR FMT_INLINE auto write_int(OutputIt out, write_int_arg<T> arg,
   }
   case presentation_type::chr:
     return write_char(out, static_cast<Char>(abs_value), specs);
-  default:
-    throw_format_error("invalid format specifier");
   }
   return out;
 }
@@ -2419,6 +2415,7 @@ FMT_CONSTEXPR auto parse_float_type_spec(const format_specs<Char>& specs,
     result.upper = true;
     FMT_FALLTHROUGH;
   case presentation_type::general_lower:
+  case presentation_type::any:
     result.format = float_format::general;
     break;
   case presentation_type::exp_upper:
@@ -2443,6 +2440,7 @@ FMT_CONSTEXPR auto parse_float_type_spec(const format_specs<Char>& specs,
     break;
   default:
     eh.on_error("invalid format specifier");
+    result.format = float_format::general;
     break;
   }
   return result;
@@ -3722,7 +3720,7 @@ FMT_CONSTEXPR20 auto format_float(Float value, int precision, float_specs specs,
 }
 template <typename Char, typename OutputIt, typename T>
 FMT_CONSTEXPR20 auto write_float(OutputIt out, T value,
-                                 format_specs<Char> specs, locale_ref loc)
+                                 basic_format_specs<Char> specs, locale_ref loc)
     -> OutputIt {
   float_specs fspecs = parse_float_type_spec(specs);
   fspecs.sign = specs.sign;
@@ -3735,7 +3733,7 @@ FMT_CONSTEXPR20 auto write_float(OutputIt out, T value,
       specs.precision = 6;
     }
     if (specs.precision > DBL_DIG ||
-        fabs(value) >= prevPowerOfTen[DBL_DIG - specs.precision + 1]) {
+        std::abs(value) >= prevPowerOfTen[DBL_DIG - specs.precision + 1]) {
       specs.precision = DBL_DIG;
       fspecs.format = float_format::general;
       fspecs.showpoint = specs.alt;
@@ -3797,17 +3795,6 @@ FMT_CONSTEXPR20 auto write_float(OutputIt out, T value,
 
 template <typename Char, typename OutputIt, typename T,
           FMT_ENABLE_IF(is_floating_point<T>::value)>
-FMT_CONSTEXPR20 auto write(OutputIt out, T value,
-                           basic_format_specs<Char> specs, locale_ref loc = {})
-    -> OutputIt {
-  if (const_check(!is_supported_floating_point(value))) return out;
-  return specs.localized && write_loc(out, value, specs, loc)
-             ? out
-             : write_float(out, value, specs, loc);
-}
-
-template <typename Char, typename OutputIt, typename T,
-          FMT_ENABLE_IF(is_floating_point<T>::value)>
 FMT_CONSTEXPR20 auto write(OutputIt out, T value, format_specs<Char> specs,
                            locale_ref loc = {}) -> OutputIt {
   if (const_check(!is_supported_floating_point(value))) return out;
@@ -3865,6 +3852,8 @@ template <typename Char, typename OutputIt, typename T,
           FMT_ENABLE_IF(is_string<T>::value)>
 constexpr auto write(OutputIt out, const T& value) -> OutputIt {
   return write<Char>(out, to_string_view(value));
+}
+
 // FMT_ENABLE_IF() condition separated to workaround an MSVC bug.
 template <
     typename Char, typename OutputIt, typename T,
@@ -4654,6 +4643,8 @@ template <typename Locale, typename... T,
 inline auto format(const Locale& loc, format_string<T...> fmt, T&&... args)
     -> std::string {
   return fmt::vformat(loc, string_view(fmt), fmt::make_format_args(args...));
+}
+
 template <typename OutputIt, typename Locale,
           FMT_ENABLE_IF(detail::is_output_iterator<OutputIt, char>::value&&
                             detail::is_locale<Locale>::value)>

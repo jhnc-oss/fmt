@@ -18,7 +18,6 @@
 
 #undef FMT_EXCEPTIONS
 #define FMT_EXCEPTIONS 0
-#define FMT_DEPRECATED_OSTREAM
 #define FMT_SHARED
 
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
@@ -311,18 +310,6 @@ template <typename T> struct type_identity { using type = T; };
 template <typename T> using type_identity_t = typename type_identity<T>::type;
 template <typename T>
 using underlying_t = typename std::underlying_type<T>::type;
-
-template <typename...> struct disjunction : std::false_type {};
-template <typename P> struct disjunction<P> : P {};
-template <typename P1, typename... Pn>
-struct disjunction<P1, Pn...>
-    : conditional_t<bool(P1::value), P1, disjunction<Pn...>> {};
-
-template <typename...> struct conjunction : std::true_type {};
-template <typename P> struct conjunction<P> : P {};
-template <typename P1, typename... Pn>
-struct conjunction<P1, Pn...>
-    : conditional_t<bool(P1::value), conjunction<Pn...>, P1> {};
 
 struct monostate {
   constexpr monostate() {}
@@ -2213,11 +2200,6 @@ FMT_CONSTEXPR inline auto code_point_length_impl(char c) -> int {
       [static_cast<unsigned char>(c) >> 3];
 }
 
-FMT_CONSTEXPR inline auto code_point_length_impl(char c) -> int {
-  return "\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\1\0\0\0\0\0\0\0\0\2\2\2\2\3\3\4"
-      [static_cast<unsigned char>(c) >> 3];
-}
-
 template <typename Char>
 FMT_CONSTEXPR auto code_point_length(const Char* begin) -> int {
   if (const_check(sizeof(Char) != 1)) return 1;
@@ -2525,6 +2507,9 @@ FMT_CONSTEXPR FMT_INLINE auto parse_format_specs(
     case '?':
       return parse_presentation_type(pres::debug,
                                      char_set | string_set | cstring_set);
+    case 'y':
+      return parse_presentation_type(pres::any,
+                                     integral_set | float_set | string_set | cstring_set | pointer_set);
     case '}':
       return begin;
     default: {
@@ -2667,8 +2652,8 @@ FMT_CONSTEXPR auto parse_format_specs(ParseContext& ctx)
 // Checks char specs and returns true iff the presentation type is char-like.
 template <typename Char>
 FMT_CONSTEXPR auto check_char_specs(const format_specs<Char>& specs) -> bool {
-  if (specs.type != presentation_type::none &&
-      specs.type != presentation_type::chr &&
+  if (specs.type != presentation_type::none && specs.type != presentation_type::chr &&
+      specs.type != presentation_type::string && specs.type != presentation_type::any &&
       specs.type != presentation_type::debug) {
     return false;
   }
@@ -2815,15 +2800,6 @@ struct formatter<T, Char,
                           U == detail::type::char_type)>
   FMT_CONSTEXPR void set_debug_format(bool set = true) {
     specs_.type = set ? presentation_type::debug : presentation_type::none;
-  }
-
-  template <detail::type U = detail::type_constant<T, Char>::value,
-            enable_if_t<(U == detail::type::string_type ||
-                         U == detail::type::cstring_type ||
-                         U == detail::type::char_type),
-                        int> = 0>
-  FMT_CONSTEXPR void set_debug_format() {
-    specs_.type = presentation_type::debug;
   }
 
   template <typename FormatContext>

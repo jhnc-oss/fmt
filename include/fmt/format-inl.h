@@ -1382,6 +1382,7 @@ small_divisor_case_label:
     --ret_value.significand;
   return ret_value;
 }
+}  // namespace dragonbox
 }  // namespace detail
 
 template <> struct formatter<detail::bigint> {
