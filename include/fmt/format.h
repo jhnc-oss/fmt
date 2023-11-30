@@ -3606,9 +3606,9 @@ FMT_CONSTEXPR20 auto write_float(OutputIt out, T value,
   float_specs fspecs = parse_float_type_spec(specs);
   fspecs.sign = specs.sign;
   if (specs.type == presentation_type::fixed_lower) {
-    static const double prevPowerOfTen[17] = {1e-1, 1,    1e1,  1e2,  1e3, 1e4,
-                                              1e5,  1e6,  1e7,  1e8,  1e9, 1e10,
-                                              1e11, 1e12, 1e13, 1e14, 1e15};
+    constexpr double prevPowerOfTen[17] = {1e-1, 1,    1e1,  1e2,  1e3, 1e4,
+                                           1e5,  1e6,  1e7,  1e8,  1e9, 1e10,
+                                           1e11, 1e12, 1e13, 1e14, 1e15};
     if (specs.precision < 0) {
       specs.precision = 6;
     }
