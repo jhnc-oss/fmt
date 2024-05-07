@@ -17,6 +17,10 @@
 #include <string>
 #include <type_traits>
 
+#undef FMT_EXCEPTIONS
+#define FMT_EXCEPTIONS 0
+#define FMT_SHARED
+
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
 #define FMT_VERSION 100201
 
@@ -2069,7 +2073,8 @@ enum class presentation_type : unsigned char {
   chr,             // 'c'
   string,          // 's'
   pointer,         // 'p'
-  debug            // '?'
+  debug,           // '?'
+  any              // 'y'
 };
 
 // Format specifiers for built-in and string types.
@@ -2456,6 +2461,9 @@ FMT_CONSTEXPR FMT_INLINE auto parse_format_specs(
     case '?':
       return parse_presentation_type(pres::debug,
                                      char_set | string_set | cstring_set);
+    case 'y':
+      return parse_presentation_type(pres::any,
+                                     integral_set | float_set | string_set | cstring_set | pointer_set);
     case '}':
       return begin;
     default: {
@@ -2601,8 +2609,8 @@ FMT_CONSTEXPR auto parse_format_specs(ParseContext& ctx)
 // Checks char specs and returns true iff the presentation type is char-like.
 template <typename Char>
 FMT_CONSTEXPR auto check_char_specs(const format_specs<Char>& specs) -> bool {
-  if (specs.type != presentation_type::none &&
-      specs.type != presentation_type::chr &&
+  if (specs.type != presentation_type::none && specs.type != presentation_type::chr &&
+      specs.type != presentation_type::string && specs.type != presentation_type::any &&
       specs.type != presentation_type::debug) {
     return false;
   }
