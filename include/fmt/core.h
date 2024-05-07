@@ -17,6 +17,10 @@
 #include <string>
 #include <type_traits>
 
+#undef FMT_EXCEPTIONS
+#define FMT_EXCEPTIONS 0
+#define FMT_SHARED
+
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
 #define FMT_VERSION 100201
 
@@ -559,10 +563,10 @@ void to_string_view(...);
 // Specifies whether S is a string type convertible to fmt::basic_string_view.
 // It should be a constexpr function but MSVC 2017 fails to compile it in
 // enable_if and MSVC 2015 fails to compile it as an alias template.
-// ADL is intentionally disabled as to_string_view is not an extension point.
+// ADL invocation of to_string_view is DEPRECATED!
 template <typename S>
 struct is_string
-    : std::is_class<decltype(detail::to_string_view(std::declval<S>()))> {};
+    : std::is_class<decltype(        to_string_view(std::declval<S>()))> {};
 
 template <typename S, typename = void> struct char_t_impl {};
 template <typename S> struct char_t_impl<S, enable_if_t<is_string<S>::value>> {
@@ -1475,11 +1479,11 @@ template <typename Context> struct arg_mapper {
   }
 
   template <typename T, typename U = remove_const_t<T>,
-            FMT_ENABLE_IF((std::is_class<U>::value || std::is_enum<U>::value ||
-                           std::is_union<U>::value) &&
-                          !is_string<U>::value && !is_char<U>::value &&
-                          !is_named_arg<U>::value &&
-                          !std::is_arithmetic<format_as_t<U>>::value)>
+            FMT_ENABLE_IF(!is_string<U>::value && !is_char<U>::value &&
+                          !std::is_array<U>::value &&
+                          !std::is_pointer<U>::value &&
+                          !std::is_arithmetic<format_as_t<U>>::value &&
+                          has_formatter<U, Context>::value)>
   FMT_CONSTEXPR FMT_INLINE auto map(T& val)
       -> decltype(FMT_DECLTYPE_THIS do_map(val)) {
     return do_map(val);
@@ -2069,7 +2073,8 @@ enum class presentation_type : unsigned char {
   chr,             // 'c'
   string,          // 's'
   pointer,         // 'p'
-  debug            // '?'
+  debug,           // '?'
+  any              // 'y'
 };
 
 // Format specifiers for built-in and string types.
@@ -2456,6 +2461,9 @@ FMT_CONSTEXPR FMT_INLINE auto parse_format_specs(
     case '?':
       return parse_presentation_type(pres::debug,
                                      char_set | string_set | cstring_set);
+    case 'y':
+      return parse_presentation_type(pres::any,
+                                     integral_set | float_set | string_set | cstring_set | pointer_set);
     case '}':
       return begin;
     default: {
@@ -2601,8 +2609,8 @@ FMT_CONSTEXPR auto parse_format_specs(ParseContext& ctx)
 // Checks char specs and returns true iff the presentation type is char-like.
 template <typename Char>
 FMT_CONSTEXPR auto check_char_specs(const format_specs<Char>& specs) -> bool {
-  if (specs.type != presentation_type::none &&
-      specs.type != presentation_type::chr &&
+  if (specs.type != presentation_type::none && specs.type != presentation_type::chr &&
+      specs.type != presentation_type::string && specs.type != presentation_type::any &&
       specs.type != presentation_type::debug) {
     return false;
   }

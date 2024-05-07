@@ -129,6 +129,9 @@ template <typename T, typename Context> class arg_converter {
 
   template <typename U, FMT_ENABLE_IF(std::is_integral<U>::value)>
   void operator()(U value) {
+    if (type_ != 'd' && type_ != 'i' && type_ != 'o' && type_ != 'u' &&
+        type_ != 'x' && type_ != 'X')
+      return;
     bool is_signed = type_ == 'd' || type_ == 'i';
     using target_type = conditional_t<std::is_same<T, void>::value, U, T>;
     if (const_check(sizeof(target_type) <= sizeof(int))) {
@@ -261,8 +264,9 @@ class printf_arg_formatter : public arg_formatter<Char> {
     }
     format_specs<Char> fmt_specs = this->specs;
     if (fmt_specs.type != presentation_type::none &&
-        fmt_specs.type != presentation_type::chr) {
-      return (*this)(static_cast<int>(value));
+        fmt_specs.type != presentation_type::chr &&
+        fmt_specs.type != presentation_type::any) {
+      fmt_specs.type = presentation_type::chr;
     }
     fmt_specs.sign = sign::none;
     fmt_specs.alt = false;
@@ -410,6 +414,8 @@ inline auto parse_printf_presentation_type(char c, type t)
     return in(t, string_set | cstring_set) ? pt::string : pt::none;
   case 'p':
     return in(t, pointer_set | cstring_set) ? pt::pointer : pt::none;
+  case 'y':
+    return pt::any;
   default:
     return pt::none;
   }
