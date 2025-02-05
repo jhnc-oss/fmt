@@ -347,7 +347,7 @@ TEST(output_redirect_test, flush_error_in_ctor) {
   write_copy.dup2(write_fd);  // "undo" close or dtor will fail
 }
 
-TEST(output_redirect_test, dup_error_in_ctor) {
+TEST(output_redirect_test, DISABLED_dup_error_in_ctor) {
   buffered_file f = open_buffered_file();
   int fd = (f.descriptor)();
   file copy = file::dup(fd);

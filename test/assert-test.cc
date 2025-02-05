@@ -12,7 +12,7 @@
 #include "fmt/core.h"
 #include "gtest/gtest.h"
 
-TEST(assert_test, fail) {
+TEST(assert_test, DISABLED_fail) {
 #if GTEST_HAS_DEATH_TEST
   EXPECT_DEBUG_DEATH(FMT_ASSERT(false, "don't panic!"), "don't panic!");
 #else

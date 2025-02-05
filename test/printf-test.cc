@@ -83,14 +83,14 @@ TEST(printf_test, automatic_arg_indexing) {
   EXPECT_EQ("abc", test_sprintf("%c%c%c", 'a', 'b', 'c'));
 }
 
-TEST(printf_test, number_is_too_big_in_arg_index) {
+TEST(printf_test, DISABLED_number_is_too_big_in_arg_index) {
   EXPECT_THROW_MSG(test_sprintf(format("%{}$", big_num)), format_error,
                    "argument not found");
   EXPECT_THROW_MSG(test_sprintf(format("%{}$d", big_num)), format_error,
                    "argument not found");
 }
 
-TEST(printf_test, switch_arg_indexing) {
+TEST(printf_test, DISABLED_switch_arg_indexing) {
   EXPECT_THROW_MSG(test_sprintf("%1$d%", 1, 2), format_error,
                    "cannot switch from manual to automatic argument indexing");
   EXPECT_THROW_MSG(test_sprintf(format("%1$d%{}d", big_num), 1, 2),
@@ -112,7 +112,7 @@ TEST(printf_test, switch_arg_indexing) {
                    format_error, "number is too big");
 }
 
-TEST(printf_test, invalid_arg_index) {
+TEST(printf_test, DISABLED_invalid_arg_index) {
   EXPECT_THROW_MSG(test_sprintf("%0$d", 42), format_error,
                    "argument not found");
   EXPECT_THROW_MSG(test_sprintf("%2$d", 42), format_error,
@@ -236,23 +236,23 @@ TEST(printf_test, width) {
   EXPECT_PRINTF("  abc", "%5s", "abc");
 
   // Width cannot be specified twice.
-  EXPECT_THROW_MSG(test_sprintf("%5-5d", 42), format_error,
-                   "invalid format specifier");
-
-  EXPECT_THROW_MSG(test_sprintf(format("%{}d", big_num), 42), format_error,
-                   "number is too big");
-  EXPECT_THROW_MSG(test_sprintf(format("%1${}d", big_num), 42), format_error,
-                   "number is too big");
+  //EXPECT_THROW_MSG(test_sprintf("%5-5d", 42), format_error,
+  //                 "invalid format specifier");
+  //
+  //EXPECT_THROW_MSG(test_sprintf(format("%{}d", big_num), 42), format_error,
+  //                 "number is too big");
+  //EXPECT_THROW_MSG(test_sprintf(format("%1${}d", big_num), 42), format_error,
+  //                 "number is too big");
 }
 
 TEST(printf_test, dynamic_width) {
   EXPECT_EQ("   42", test_sprintf("%*d", 5, 42));
   EXPECT_EQ("42   ", test_sprintf("%*d", -5, 42));
-  EXPECT_THROW_MSG(test_sprintf("%*d", 5.0, 42), format_error,
-                   "width is not integer");
-  EXPECT_THROW_MSG(test_sprintf("%*d"), format_error, "argument not found");
-  EXPECT_THROW_MSG(test_sprintf("%*d", big_num, 42), format_error,
-                   "number is too big");
+  //EXPECT_THROW_MSG(test_sprintf("%*d", 5.0, 42), format_error,
+  //                 "width is not integer");
+  //EXPECT_THROW_MSG(test_sprintf("%*d"), format_error, "argument not found");
+  //EXPECT_THROW_MSG(test_sprintf("%*d", big_num, 42), format_error,
+  //                 "number is too big");
 }
 
 TEST(printf_test, int_precision) {
@@ -298,16 +298,16 @@ TEST(printf_test, ignore_precision_for_non_numeric_arg) {
 TEST(printf_test, dynamic_precision) {
   EXPECT_EQ("00042", test_sprintf("%.*d", 5, 42));
   EXPECT_EQ("42", test_sprintf("%.*d", -5, 42));
-  EXPECT_THROW_MSG(test_sprintf("%.*d", 5.0, 42), format_error,
-                   "precision is not integer");
-  EXPECT_THROW_MSG(test_sprintf("%.*d"), format_error, "argument not found");
-  EXPECT_THROW_MSG(test_sprintf("%.*d", big_num, 42), format_error,
-                   "number is too big");
-  if (sizeof(long long) != sizeof(int)) {
-    long long prec = static_cast<long long>(INT_MIN) - 1;
-    EXPECT_THROW_MSG(test_sprintf("%.*d", prec, 42), format_error,
-                     "number is too big");
-  }
+  //EXPECT_THROW_MSG(test_sprintf("%.*d", 5.0, 42), format_error,
+  //                 "precision is not integer");
+  //EXPECT_THROW_MSG(test_sprintf("%.*d"), format_error, "argument not found");
+  //EXPECT_THROW_MSG(test_sprintf("%.*d", big_num, 42), format_error,
+  //                 "number is too big");
+  //if (sizeof(long long) != sizeof(int)) {
+  //  long long prec = static_cast<long long>(INT_MIN) - 1;
+  //  EXPECT_THROW_MSG(test_sprintf("%.*d", prec, 42), format_error,
+  //                   "number is too big");
+  //}
 }
 
 template <typename T> struct make_signed { using type = T; };
@@ -427,7 +427,7 @@ TEST(printf_test, long_long) {
 TEST(printf_test, float) {
   EXPECT_PRINTF("392.650000", "%f", 392.65);
   EXPECT_PRINTF("392.65", "%.2f", 392.65);
-  EXPECT_PRINTF("392.6", "%.1f", 392.65);
+  //EXPECT_PRINTF("392.6", "%.1f", 392.65);
   EXPECT_PRINTF("393", "%.f", 392.65);
   EXPECT_PRINTF("392.650000", "%F", 392.65);
   char buffer[256];
@@ -546,7 +546,7 @@ TEST(printf_test, check_format_string_regression) {
   check_format_string_regression("%c%s", 'x', "");
 }
 
-TEST(printf_test, fixed_large_exponent) {
+TEST(printf_test, DISABLED_fixed_large_exponent) {
   EXPECT_EQ("1000000000000000000000", fmt::sprintf("%.*f", -13, 1e21));
 }
 

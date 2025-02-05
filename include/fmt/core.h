@@ -19,7 +19,6 @@
 
 #undef FMT_EXCEPTIONS
 #define FMT_EXCEPTIONS 0
-#define FMT_SHARED
 
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
 #define FMT_VERSION 100201
@@ -1479,11 +1478,11 @@ template <typename Context> struct arg_mapper {
   }
 
   template <typename T, typename U = remove_const_t<T>,
-            FMT_ENABLE_IF(!is_string<U>::value && !is_char<U>::value &&
-                          !std::is_array<U>::value &&
-                          !std::is_pointer<U>::value &&
-                          !std::is_arithmetic<format_as_t<U>>::value &&
-                          has_formatter<U, Context>::value)>
+            FMT_ENABLE_IF((std::is_class<U>::value || std::is_enum<U>::value ||
+                           std::is_union<U>::value) &&
+                          !is_string<U>::value && !is_char<U>::value &&
+                          !is_named_arg<U>::value &&
+                          !std::is_arithmetic<format_as_t<U>>::value)>
   FMT_CONSTEXPR FMT_INLINE auto map(T& val)
       -> decltype(FMT_DECLTYPE_THIS do_map(val)) {
     return do_map(val);

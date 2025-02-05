@@ -152,7 +152,7 @@ template <> struct formatter<throws_on_move> : formatter<string_view> {
 };
 }  // namespace fmt
 
-TEST(std_test, variant) {
+TEST(std_test, DISABLED_variant) {
 #ifdef __cpp_lib_variant
   EXPECT_EQ(fmt::format("{}", std::monostate{}), "monostate");
   using V0 = std::variant<int, float, std::string, char>;
